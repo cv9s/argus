@@ -1,0 +1,6 @@
+# ARGUS writes its conversation log here. Keep it private.
+argus-log.txt
+*.log
+
+# Personal copies of the settings file (for example, one with an API key in it)
+argus.local.ps1

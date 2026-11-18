@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A.R.G.U.S. is a personal AI voice assistant for Windows: conversation, voice commands, a double-clap morning brief and a live dashboard.">
+<title>A.R.G.U.S.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one dark HUD-style column; hero screenshot, capabilities, a real exchange, the signal path, build notes. Single committed dark look, like the product itself. */
+:root {
+  --void: #050a14;        /* page ground, the dashboard's own night */
+  --panel: #0b1626;       /* raised surfaces */
+  --line: #1c2c44;        /* hairlines */
+  --ink: #e3ecf7;         /* main text */
+  --dim: #8fa3bd;         /* secondary text */
+  --signal: #6fdcff;      /* ARGUS cyan, taken from the dashboard */
+  --amber: #ffbe55;       /* the dashboard's warm accent, used sparingly */
+  --display: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
+  --body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+html { background: var(--void); }
+body { margin: 0; background: var(--void); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 56px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 80px; }
+a { color: var(--signal); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--signal); }
+.lede { color: var(--dim); max-width: 62ch; font-size: 18px; }
+
+/* hero */
+.hero { display: grid; gap: 28px; }
+.hero-head { display: grid; gap: 14px; }
+h1 { font-size: clamp(44px, 9vw, 92px); line-height: .95; letter-spacing: .06em; }
+h1 .dot { color: var(--signal); }
+.expansion { font-family: var(--mono); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.expansion b { color: var(--ink); font-weight: 500; }
+.shot { margin: 0; display: grid; gap: 10px; }
+.frame { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); box-shadow: 0 30px 80px -30px rgba(111, 220, 255, .25); }
+.frame img { display: block; width: 100%; height: auto; transition: opacity .6s ease; }
+.frame img + img { position: absolute; inset: 0; opacity: 0; }
+.frame.speaking img + img { opacity: 1; }
+.shot-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+figcaption { font-size: 13px; color: var(--dim); }
+.toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.toggle button { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); background: transparent; border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.toggle button[aria-pressed="true"] { background: var(--signal); color: var(--void); }
+
+/* capabilities */
+section { display: grid; gap: 28px; }
+h2 { font-size: clamp(26px, 4vw, 36px); }
+.caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.cap { background: var(--void); padding: 24px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.cap h3 { font-size: 19px; font-weight: 500; }
+.cap p { color: var(--dim); font-size: 15px; }
+.say { font-family: var(--mono); font-size: 13px; color: var(--signal); }
+.say::before { content: "› "; color: var(--amber); }
+
+/* conversation */
+.log { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; font-family: var(--mono); font-size: 14px; line-height: 1.55; display: grid; gap: 14px; overflow-x: auto; }
+.turn { display: grid; grid-template-columns: 74px 64px minmax(0, 1fr); gap: 10px; }
+.t { color: #5d7391; font-variant-numeric: tabular-nums; }
+.who { color: var(--dim); }
+.turn.argus .who { color: var(--signal); }
+.turn.argus .msg { color: var(--ink); }
+.turn.you .msg { color: #c7d4e4; }
+.note { font-size: 13px; color: var(--dim); }
+
+/* signal path */
+.path { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.node { flex: 1 1 160px; min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 6px; align-content: start; background: var(--panel); }
+.node .k { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--signal); }
+.node strong { font-family: var(--display); font-weight: 500; font-size: 17px; }
+.node span { font-size: 14px; color: var(--dim); }
+.arrow { align-self: center; color: var(--amber); font-family: var(--mono); }
+
+/* build notes */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 28px 40px; }
+.notes article { display: grid; gap: 8px; min-width: 0; }
+.notes h3 { font-size: 18px; font-weight: 500; }
+.notes p { color: var(--dim); font-size: 15px; max-width: 62ch; }
+.stack { display: flex; flex-wrap: wrap; gap: 8px; }
+.stack li { list-style: none; font-family: var(--mono); font-size: 12.5px; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.stack { margin: 0; padding: 0; }
+
+footer { border-top: 1px solid var(--line); padding-top: 28px; display: grid; gap: 6px; }
+footer strong { font-family: var(--display); font-weight: 500; font-size: 18px; }
+footer p { color: var(--dim); font-size: 15px; max-width: 62ch; }
+
+@media (max-width: 560px) {
+  .turn { grid-template-columns: 1fr; gap: 2px; }
+  .turn .t { font-size: 12px; }
+  .arrow { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .frame img { transition: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-head">
+      <span class="eyebrow">Personal AI voice assistant · Windows · 2026</span>
+      <h1>A<span class="dot">.</span>R<span class="dot">.</span>G<span class="dot">.</span>U<span class="dot">.</span>S<span class="dot">.</span></h1>
+      <p class="expansion"><b>A</b>dvanced <b>R</b>esponse and <b>G</b>eneral <b>U</b>ser <b>S</b>upport</p>
+      <p class="lede">An assistant that lives on my PC and opens the moment I log in. I say its name, it listens, and we talk. It remembers what I said, knows tomorrow's weather, and can open apps for me. The AI runs on my own machine, so the conversation stays there.</p>
+    </div>
+    <figure class="shot">
+      <div class="frame" id="frame">
+        <img src="standby.jpg" alt="The ARGUS dashboard at rest: system vitals on the left, a glowing particle nebula in the center, radar and diagnostics on the right." width="1600" height="900">
+        <img src="speaking.jpg" alt="The same dashboard while ARGUS answers: the view pushes into the nebula and the caption reads 'Tomorrow looks partly cloudy with a high of 72, Sir.'" width="1600" height="900">
+      </div>
+      <div class="shot-bar">
+        <figcaption>The dashboard. When ARGUS speaks, the view pushes into the nebula. Business figures shown are demo data.</figcaption>
+        <div class="toggle" role="group" aria-label="Dashboard state">
+          <button type="button" id="b-idle" aria-pressed="true">Standby</button>
+          <button type="button" id="b-speak" aria-pressed="false">Speaking</button>
+        </div>
+      </div>
+    </figure>
+  </header>
+
+  <section aria-labelledby="h-does">
+    <span class="eyebrow">What it does</span>
+    <h2 id="h-does">Hands-free, from the moment the PC turns on</h2>
+    <div class="caps">
+      <div class="cap">
+        <h3>Holds a real conversation</h3>
+        <p>Say “Argus” once, then keep talking. It listens for your reply after every answer and keeps the whole conversation in mind until things go quiet for 20 minutes.</p>
+        <span class="say">Argus, what should I wear tomorrow?</span>
+      </div>
+      <div class="cap">
+        <h3>Morning brief on a double clap</h3>
+        <p>Two claps and it reads the time, today's weather in Katy, what to bring, and my priorities for the day. A new clap cuts it off and starts over.</p>
+        <span class="say">👏 👏</span>
+      </div>
+      <div class="cap">
+        <h3>Runs the computer by voice</h3>
+        <p>Opens any installed app by name, closes windows, searches Google or YouTube, changes the volume and locks the PC. Shutdown is deliberately off-limits.</p>
+        <span class="say">Argus, open Spotify</span>
+      </div>
+      <div class="cap">
+        <h3>Live dashboard</h3>
+        <p>Real CPU, memory, disk and network readings from the PC, live logs, and a 3D nebula you can spin with the mouse.</p>
+        <span class="say">Argus, system status</span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-talk">
+    <span class="eyebrow">From the log</span>
+    <h2 id="h-talk">A real exchange</h2>
+    <div class="log" role="log" aria-label="Conversation log">
+      <div class="turn you"><span class="t">14:32:05</span><span class="who">YOU</span><span class="msg">What should I wear to the gym?</span></div>
+      <div class="turn argus"><span class="t">14:32:06</span><span class="who">ARGUS</span><span class="msg">Considering it's still overcast today, I'd go with comfortable layers you can adjust: a breathable base layer and something moisture-wicking on top.</span></div>
+      <div class="turn you"><span class="t">14:32:26</span><span class="who">YOU</span><span class="msg">OK, that's awesome.</span></div>
+      <div class="turn argus"><span class="t">14:32:27</span><span class="who">ARGUS</span><span class="msg">Glad I could help. Now, about that task you wanted to knock out before noon...</span></div>
+      <div class="turn you"><span class="t">14:32:44</span><span class="who">YOU</span><span class="msg">What task should I do?</span></div>
+      <div class="turn argus"><span class="t">14:32:46</span><span class="who">ARGUS</span><span class="msg">According to your reminders, focus on your most important task this morning. Getting it out of the way before noon will set up the rest of your day.</span></div>
+    </div>
+    <p class="note">Shortened and lightly edited from ARGUS's own conversation log. The follow-ups came without repeating the wake word.</p>
+  </section>
+
+  <section aria-labelledby="h-how">
+    <span class="eyebrow">How it works</span>
+    <h2 id="h-how">The signal path</h2>
+    <div class="path">
+      <div class="node"><span class="k">Ears</span><strong>Microphone</strong><span>Speech recognition listens for “Argus”; a separate detector listens for two sharp claps.</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="node"><span class="k">Face</span><strong>Dashboard</strong><span>Full-screen page in Edge that shows what's happening and speaks the replies.</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="node"><span class="k">Hands</span><strong>PowerShell link</strong><span>A small local server that reads the PC's vitals and runs approved commands.</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="node"><span class="k">Brain</span><strong>Local AI model</strong><span>Llama 3.2 through Ollama, given the time, weather and my priorities with every question.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-notes">
+    <span class="eyebrow">Build notes</span>
+    <h2 id="h-notes">Problems worth solving</h2>
+    <div class="notes">
+      <article>
+        <h3>It kept answering itself</h3>
+        <p>Follow-up questions came back mangled. The log showed why: the microphone was hearing ARGUS through the speakers and gluing its last sentence onto my question. Now it flushes the mic when it finishes talking and ignores anything that matches what it just said.</p>
+      </article>
+      <article>
+        <h3>A brain that was never connected</h3>
+        <p>Answers stayed generic even with the AI installed. The log showed it was never reaching the model: Windows tried the wrong network address first and gave up after two seconds. One address change fixed it.</p>
+      </article>
+      <article>
+        <h3>Safe by design</h3>
+        <p>It can only run actions on an approved list. Vague requests like “close it” get a question back, and it refuses to shut down or restart the PC.</p>
+      </article>
+      <article>
+        <h3>How it was built</h3>
+        <p>I designed and directed ARGUS using AI coding tools (Claude), then tested it in daily use, reading its logs to find what broke and asking for the fix.</p>
+      </article>
+    </div>
+    <ul class="stack" aria-label="Technology">
+      <li>Ollama · Llama 3.2</li><li>PowerShell</li><li>Web Speech API</li><li>Web Audio (clap detection)</li><li>Canvas (3D nebula)</li><li>Open-Meteo weather</li><li>Wikipedia lookups</li><li>Microsoft Edge kiosk</li>
+    </ul>
+  </section>
+
+  <footer>
+    <strong>Built by Ibrahim Bah</strong>
+    <p>Studying Artificial Intelligence at Houston Community College, with a background in sales. Katy, Texas.</p>
+    <p><a href="https://github.com/cv9s/argus">View the code on GitHub</a></p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var frame = document.getElementById('frame'), bi = document.getElementById('b-idle'), bs = document.getElementById('b-speak');
+  function set(speaking) { frame.classList.toggle('speaking', speaking); bi.setAttribute('aria-pressed', String(!speaking)); bs.setAttribute('aria-pressed', String(speaking)); }
+  bi.addEventListener('click', function () { set(false); });
+  bs.addEventListener('click', function () { set(true); });
+})();
+</script>
+
+</body>
+</html>
